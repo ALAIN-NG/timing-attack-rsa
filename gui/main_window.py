@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QTextEdit, QPushButton, QHBoxLayout, QMessageBox,
     QApplication  # Ajout de cet import
 )
-from PyQt6.QtCore import Qt, QFile, QTextStream, QSize, pyqtSignal
+from PyQt6.QtCore import Qt, QFile, QTextStream, QSize, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QAction, QIcon, QKeySequence
 
 # Importer les futurs onglets
@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.current_theme = "dark"
         self.setWindowTitle("INF4268 - Attaque Temporelle sur RSA")
-        self.setMinimumSize(1280, 800)
+        self.setMinimumSize(1780, 1000)
 
         self._create_actions()
         self._create_menu_bar()
@@ -159,15 +159,22 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.timing_tab, "Phase 2: Mesures de Timing")
         self.tab_widget.addTab(self.attack_tab, "Phase 3: Attaque")
         self.tab_widget.addTab(self.defense_tab, "Phase 4: Contre-mesures")
+        self.rsa_tab.log_message.connect(self.append_console_log)
+        # self.timing_tab.log_message.connect(self.append_console_log)
+        # self.attack_tab.log_message.connect(self.append_console_log)
+        # self.defense_tab.log_message.connect(self.append_console_log)
 
         main_layout.addWidget(self.tab_widget)
 
         # Console de log
         console_container = QWidget()
-        console_layout = QVBoxLayout(console_container)
-        console_layout.setContentsMargins(5, 5, 5, 5)
+        console_layout = QHBoxLayout(console_container)
+        console_layout.setContentsMargins(4, 4, 4, 4)
         
         self.console = ConsoleWidget()
+        # self.console.setMinimumWidth(620)
+        self.console.setMaximumWidth(820)
+        self.console.setMinimumHeight(100)
         console_layout.addWidget(self.console)
         
         # Boutons de la console
@@ -221,3 +228,15 @@ class MainWindow(QMainWindow):
             "<p>Enseignant: Dr. Ekodeck Stéphane Gaël R.</p>"
             "<p>Version 1.0</p>"
         )
+    
+    def _connect_tab_logs(self):
+        """Connecte les signaux de log des onglets à la console."""
+        # Onglet 1
+        if hasattr(self.rsa_tab, 'worker'):
+            # Sera connecté dynamiquement quand le worker est créé
+            pass
+
+    @pyqtSlot(str, str)
+    def append_console_log(self, level: str, message: str):
+        """Ajoute un message à la console."""
+        self.console.append_log(level, message)
