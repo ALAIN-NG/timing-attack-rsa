@@ -156,6 +156,6 @@ Master 1 Sécurité Informatique – INF4268
 ---
 
 ## 📄 Licence
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
+Ce projet est sous licence MIT. Voir le fichier [LICENSE] pour plus de détails.
 
 ---
