@@ -1,0 +1,38 @@
+# .gitignore
+
+# Environnement virtuel
+venv/
+env/
+.venv/
+__pycache__/
+
+# Fichiers Python compilés
+*.pyc
+*.pyo
+*.pyd
+
+# Fichiers de données
+data/raw/*.csv
+data/exports/*.png
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Rapports de couverture
+htmlcov/
+.coverage
+.coverage.*
+
+# Logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+*.temp

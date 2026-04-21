@@ -1,0 +1,138 @@
+QMainWindow, QDialog, QWidget {
+    background-color: #1E2333;
+    color: #EAECEE;
+    font-family: "Segoe UI", "SF Pro", "Ubuntu", sans-serif;
+    font-size: 10pt;
+}
+
+QMenuBar {
+    background-color: #252B3B;
+    color: #EAECEE;
+    border-bottom: 1px solid #2C3E50;
+}
+QMenuBar::item:selected {
+    background-color: #2E75B6;
+}
+
+QMenu {
+    background-color: #252B3B;
+    color: #EAECEE;
+    border: 1px solid #2C3E50;
+}
+QMenu::item:selected {
+    background-color: #2E75B6;
+}
+
+QToolBar {
+    background-color: #252B3B;
+    border-bottom: 1px solid #2C3E50;
+    spacing: 3px;
+    padding: 3px;
+}
+
+QTabWidget::pane {
+    border: 1px solid #2C3E50;
+    background-color: #1E2333;
+}
+QTabBar::tab {
+    background-color: #252B3B;
+    color: #AAB7B8;
+    padding: 8px 15px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+QTabBar::tab:selected {
+    background-color: #2E75B6;
+    color: white;
+}
+QTabBar::tab:hover:!selected {
+    background-color: #2C3E50;
+}
+
+QGroupBox {
+    border: 1px solid #2C3E50;
+    border-radius: 6px;
+    margin-top: 1ex;
+    font-weight: bold;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    color: #EAECEE;
+}
+
+QPushButton {
+    background-color: #2E75B6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #3498DB;
+}
+QPushButton:pressed {
+    background-color: #1B4F72;
+}
+QPushButton:disabled {
+    background-color: #5D6D7E;
+    color: #BFC9CA;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+    background-color: #252B3B;
+    color: #EAECEE;
+    border: 1px solid #2C3E50;
+    border-radius: 4px;
+    padding: 4px;
+    selection-background-color: #2E75B6;
+}
+QComboBox::drop-down {
+    border: none;
+}
+QComboBox::down-arrow {
+    image: url(none); /* A remplacer plus tard par une icône */
+    width: 12px;
+    height: 12px;
+}
+
+QLCDNumber {
+    background-color: #17202A;
+    color: #27AE60;
+    border: 1px solid #2C3E50;
+    border-radius: 4px;
+}
+
+QProgressBar {
+    border: 1px solid #2C3E50;
+    border-radius: 4px;
+    text-align: center;
+    color: white;
+}
+QProgressBar::chunk {
+    background-color: #2E75B6;
+    border-radius: 3px;
+}
+
+QStatusBar {
+    background-color: #252B3B;
+    color: #AAB7B8;
+    border-top: 1px solid #2C3E50;
+}
+
+QScrollBar:vertical {
+    background-color: #1E2333;
+    width: 12px;
+    border-radius: 6px;
+}
+QScrollBar::handle:vertical {
+    background-color: #5D6D7E;
+    border-radius: 5px;
+    min-height: 20px;
+}
+QScrollBar::handle:vertical:hover {
+    background-color: #2E75B6;
+}
