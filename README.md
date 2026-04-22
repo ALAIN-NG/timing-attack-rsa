@@ -1,6 +1,6 @@
 # 🔐 INF4268 – Attaque par Canal Auxiliaire (Timing) sur RSA
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.12%2B-blue)
 ![PyQt6](https://img.shields.io/badge/PyQt-6.5%2B-green)
 ![Licence](https://img.shields.io/badge/Licence-MIT-yellow)
 
@@ -48,16 +48,20 @@ pip install -r requirements.txt
 
 # 4. Lancer l'application
 python main.py
-Avec Docker
-bash
+```
+
+### Avec Docker
+
+```bash
 docker build -t rsa-timing-attack .
 docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix rsa-timing-attack
 ```
+
 ---
 
 ## 📁 Structure du projet
 
-```bash
+```
 timing-attack-rsa/
 ├── main.py                     # Point d'entrée de l'application
 ├── requirements.txt            # Dépendances Python
@@ -103,24 +107,29 @@ timing-attack-rsa/
     ├── test_attack_engine.py
     └── test_gui.py
 ```
+
 ---
 
 ## 🖥️ Aperçu de l'interface
 
-Onglet	Fonctionnalité
-Phase 1 – RSA Naïf	Génération de clés, chiffrement/déchiffrement, tests unitaires, visualisation de l'exposant privé
-Phase 2 – Mesures de Timing	Collecte de timings, histogrammes, boxplots, heatmaps, export CSV
-Phase 3 – Attaque	Extraction bit par bit (BitGridWidget animé), courbe ROC, matrice de confusion
-Phase 4 – Contre-mesures	RSA Blinding et Montgomery Ladder, graphiques comparatifs, tests statistiques
+| Onglet | Fonctionnalité |
+|--------|----------------|
+| **Phase 1 – RSA Naïf** | Génération de clés, chiffrement/déchiffrement, tests unitaires, visualisation de l'exposant privé |
+| **Phase 2 – Mesures de Timing** | Collecte de timings, histogrammes, boxplots, heatmaps, export CSV |
+| **Phase 3 – Attaque** | Extraction bit par bit (BitGridWidget animé), courbe ROC, matrice de confusion |
+| **Phase 4 – Contre-mesures** | RSA Blinding et Montgomery Ladder, graphiques comparatifs, tests statistiques |
+
+---
 
 ## 📊 Résultats attendus
 
-Scénario	Taille de clé	Mesures	Taux d'extraction attendu
-S1 – Baseline	512 bits	1 000	80–95 %
-S2 – Principal	1024 bits	2 000	70–90 %
-S3 – Bruit faible	Docker isolé	1 000	85–95 %
-S4 – Bruit fort	Charge CPU simulée	2 000	60–75 %
-S5 – Seuil minimal	512 bits	Variable	≥ 8 bits extraits
+| Scénario | Taille de clé | Mesures | Taux d'extraction attendu |
+|----------|---------------|---------|---------------------------|
+| S1 – Baseline | 512 bits | 1 000 | 80–95 % |
+| S2 – Principal | 1024 bits | 2 000 | 70–90 % |
+| S3 – Bruit faible | Docker isolé | 1 000 | 85–95 % |
+| S4 – Bruit fort | Charge CPU simulée | 2 000 | 60–75 % |
+| S5 – Seuil minimal | 512 bits | Variable | ≥ 8 bits extraits |
 
 ---
 
@@ -133,29 +142,41 @@ pytest tests/ -v
 # Avec couverture
 pytest tests/ --cov=core --cov=gui --cov-report=html
 ```
+
 ---
 
 ## 📚 Références
 
-Kocher, P. (1996). Timing Attacks on Implementations of Diffie-Hellman, RSA, DSS, and Other Systems. CRYPTO'96.
-
-Brumley, D., & Boneh, D. (2003). Remote Timing Attacks are Practical. USENIX Security.
-
-OpenSSL Security Advisory (2003). RSA blinding vulnerability.
+- **Kocher, P. (1996).** *Timing Attacks on Implementations of Diffie-Hellman, RSA, DSS, and Other Systems.* CRYPTO'96.
+- **Brumley, D., & Boneh, D. (2003).** *Remote Timing Attacks are Practical.* USENIX Security.
+- **OpenSSL Security Advisory (2003).** *RSA blinding vulnerability.*
 
 ---
 
 ## 👥 Auteurs
 
-NGUEUDJANG DJOMO ALAIN GILDAS – 22W2183
-
-ESSIMBI MBALLA GABRIELLE – 22U2019
+- **NGUEUDJANG DJOMO ALAIN GILDAS** – 22W2183
+- **ESSIMBI MBALLA GABRIELLE** – 22U2019
 
 Master 1 Sécurité Informatique – INF4268
 
 ---
 
 ## 📄 Licence
-Ce projet est sous licence MIT. Voir le fichier [LICENSE] pour plus de détails.
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## ✅ État d'avancement actuel
+
+| Phase | État | Description |
+|-------|------|-------------|
+| **S1** | ✅ Terminé | Squelette PyQt6, thème, GitHub, README |
+| **S2-S3** | ✅ Terminé | Phase 1 - RSA Naïf (génération, tests, visualisation) |
+| **S4** | ✅ Terminé | Phase 2 - Mesures de Timing (banc de mesure, worker, interface) |
+| **S5-S6** | ⏳ À faire | Phase 3 - Attaque par timing |
+| **S7** | ⏳ À faire | Phase 4 - Contre-mesures |
+| **S8** | ⏳ À faire | Finalisation, rapport, soutenance |
 
 ---

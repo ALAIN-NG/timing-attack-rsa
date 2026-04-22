@@ -124,7 +124,7 @@ class RsaTab(QWidget):
         self.d_display.setPlaceholderText("••••••••••••••••")
         d_layout.addWidget(self.d_display)
         
-        self.reveal_btn = QPushButton("👁 Révéler")
+        self.reveal_btn = QPushButton("👁 Voir")
         self.reveal_btn.setEnabled(False)
         self.reveal_btn.clicked.connect(self._toggle_reveal_private_key)
         d_layout.addWidget(self.reveal_btn)

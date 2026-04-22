@@ -160,11 +160,12 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.attack_tab, "Phase 3: Attaque")
         self.tab_widget.addTab(self.defense_tab, "Phase 4: Contre-mesures")
         self.rsa_tab.log_message.connect(self.append_console_log)
-        # self.timing_tab.log_message.connect(self.append_console_log)
+        self.timing_tab.log_message.connect(self.append_console_log)
         # self.attack_tab.log_message.connect(self.append_console_log)
         # self.defense_tab.log_message.connect(self.append_console_log)
-
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
         main_layout.addWidget(self.tab_widget)
+        self.timing_tab.session_loaded.connect(self._on_session_loaded)
 
         # Console de log
         console_container = QWidget()
@@ -195,6 +196,12 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(console_container)
 
+    def _on_tab_changed(self, index):
+        """Appelé quand l'utilisateur change d'onglet."""
+        # Transmettre l'instance RSA à l'onglet 2
+        if index == 1 and self.rsa_tab.rsa_instance:
+            self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+            
     def _create_status_bar(self):
         """Crée la barre de statut."""
         self.status_bar = QStatusBar()
@@ -240,3 +247,22 @@ class MainWindow(QMainWindow):
     def append_console_log(self, level: str, message: str):
         """Ajoute un message à la console."""
         self.console.append_log(level, message)
+
+    def _on_tab_changed(self, index):
+        """Appelé quand l'utilisateur change d'onglet."""
+        # Transmettre l'instance RSA à l'onglet 2
+        if index == 1 and self.rsa_tab.rsa_instance:
+            self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+        
+        # Si on revient à l'onglet 1 après avoir chargé une session dans l'onglet 2
+        if index == 0 and self.timing_tab.rsa_instance:
+            # Synchroniser l'instance RSA
+            if not self.rsa_tab.rsa_instance:
+                self.rsa_tab.rsa_instance = self.timing_tab.rsa_instance
+                self.rsa_tab._on_keygen_finished(self.timing_tab.rsa_instance)
+    
+    def _on_session_loaded(self, rsa_instance):
+        """Appelé quand une session est chargée dans l'onglet 2."""
+        self.rsa_tab.rsa_instance = rsa_instance
+        self.rsa_tab._on_keygen_finished(rsa_instance)
+        self.append_console_log("INFO", "Instance RSA synchronisée avec l'onglet 1")
