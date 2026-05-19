@@ -136,3 +136,23 @@ QScrollBar::handle:vertical {
 QScrollBar::handle:vertical:hover {
     background-color: #2E75B6;
 }
+
+QPushButton#dangerButton {
+    background-color: #C0392B;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 12pt;
+}
+QPushButton#dangerButton:hover {
+    background-color: #E74C3C;
+}
+QPushButton#dangerButton:pressed {
+    background-color: #922B21;
+}
+QPushButton#dangerButton:disabled {
+    background-color: #5D6D7E;
+    color: #BFC9CA;
+}

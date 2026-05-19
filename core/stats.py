@@ -40,10 +40,21 @@ def welch_ttest(group0: List[float], group1: List[float]) -> Tuple[float, float]
     Returns:
         Tuple (statistique t, p-value)
     """
-    if len(group0) < 2 or len(group1) < 2:
+    # Conversion explicite en tableaux numpy de type float64
+    g0 = np.array(group0, dtype=np.float64)
+    g1 = np.array(group1, dtype=np.float64)
+    
+    if len(g0) < 2 or len(g1) < 2:
         return 0.0, 1.0
     
-    t_stat, p_value = stats.ttest_ind(group0, group1, equal_var=False)
+    # Supprimer les NaN et inf
+    g0 = g0[np.isfinite(g0)]
+    g1 = g1[np.isfinite(g1)]
+    
+    if len(g0) < 2 or len(g1) < 2:
+        return 0.0, 1.0
+    
+    t_stat, p_value = stats.ttest_ind(g0, g1, equal_var=False)
     return float(t_stat), float(p_value)
 
 
@@ -58,10 +69,19 @@ def ks_test(group0: List[float], group1: List[float]) -> Tuple[float, float]:
     Returns:
         Tuple (statistique KS, p-value)
     """
-    if len(group0) < 2 or len(group1) < 2:
+    g0 = np.array(group0, dtype=np.float64)
+    g1 = np.array(group1, dtype=np.float64)
+    
+    if len(g0) < 2 or len(g1) < 2:
         return 0.0, 1.0
     
-    ks_stat, p_value = stats.ks_2samp(group0, group1)
+    g0 = g0[np.isfinite(g0)]
+    g1 = g1[np.isfinite(g1)]
+    
+    if len(g0) < 2 or len(g1) < 2:
+        return 0.0, 1.0
+    
+    ks_stat, p_value = stats.ks_2samp(g0, g1)
     return float(ks_stat), float(p_value)
 
 
@@ -76,11 +96,31 @@ def pearson_correlation(x: List[float], y: List[float]) -> Tuple[float, float]:
     Returns:
         Tuple (coefficient de corrélation, p-value)
     """
-    if len(x) < 2 or len(y) < 2:
+    # Conversion explicite en tableaux numpy de type float64
+    x_arr = np.array(x, dtype=np.float64)
+    y_arr = np.array(y, dtype=np.float64)
+    
+    if len(x_arr) < 2 or len(y_arr) < 2:
         return 0.0, 1.0
     
-    corr, p_value = stats.pearsonr(x, y)
-    return float(corr), float(p_value)
+    # Supprimer les paires avec NaN ou inf
+    mask = np.isfinite(x_arr) & np.isfinite(y_arr)
+    x_arr = x_arr[mask]
+    y_arr = y_arr[mask]
+    
+    if len(x_arr) < 2:
+        return 0.0, 1.0
+    
+    # Vérifier qu'il y a de la variance
+    if np.std(x_arr) == 0 or np.std(y_arr) == 0:
+        return 0.0, 1.0
+    
+    try:
+        corr, p_value = stats.pearsonr(x_arr, y_arr)
+        return float(corr), float(p_value)
+    except Exception as e:
+        print(f"Erreur pearson_correlation: {e}")
+        return 0.0, 1.0
 
 
 def spearman_correlation(x: List[float], y: List[float]) -> Tuple[float, float]:
@@ -94,11 +134,33 @@ def spearman_correlation(x: List[float], y: List[float]) -> Tuple[float, float]:
     Returns:
         Tuple (coefficient de corrélation, p-value)
     """
-    if len(x) < 2 or len(y) < 2:
+    # Conversion explicite en tableaux numpy de type float64
+    x_arr = np.array(x, dtype=np.float64)
+    y_arr = np.array(y, dtype=np.float64)
+    
+    if len(x_arr) < 2 or len(y_arr) < 2:
         return 0.0, 1.0
     
-    corr, p_value = stats.spearmanr(x, y)
-    return float(corr), float(p_value)
+    # Supprimer les paires avec NaN ou inf
+    mask = np.isfinite(x_arr) & np.isfinite(y_arr)
+    x_arr = x_arr[mask]
+    y_arr = y_arr[mask]
+    
+    if len(x_arr) < 2:
+        return 0.0, 1.0
+    
+    try:
+        corr, p_value = stats.spearmanr(x_arr, y_arr)
+        # spearmanr peut retourner un objet de type SignificanceResult
+        if hasattr(corr, 'statistic'):
+            return float(corr.statistic), float(corr.pvalue)
+        elif hasattr(corr, 'correlation'):
+            return float(corr.correlation), float(corr.pvalue)
+        else:
+            return float(corr), float(p_value)
+    except Exception as e:
+        print(f"Erreur spearman_correlation: {e}")
+        return 0.0, 1.0
 
 
 def compute_roc_curve(
@@ -120,15 +182,19 @@ def compute_roc_curve(
     if len(predictions) != len(true_labels):
         raise ValueError("predictions et true_labels doivent avoir la même longueur")
     
+    # Conversion en tableaux numpy
+    pred = np.array(predictions, dtype=np.float64)
+    labels = np.array(true_labels, dtype=np.int32)
+    
     # Trier par score décroissant
-    sorted_indices = np.argsort(predictions)[::-1]
-    sorted_labels = np.array(true_labels)[sorted_indices]
+    sorted_indices = np.argsort(pred)[::-1]
+    sorted_labels = labels[sorted_indices]
     
     tpr_list = []
     fpr_list = []
     
-    n_pos = np.sum(true_labels)
-    n_neg = len(true_labels) - n_pos
+    n_pos = int(np.sum(labels))
+    n_neg = len(labels) - n_pos
     
     if n_pos == 0 or n_neg == 0:
         return [0.0, 1.0], [0.0, 1.0], 0.5
@@ -145,8 +211,8 @@ def compute_roc_curve(
         tpr = tp / n_pos
         fpr = fp / n_neg
         
-        tpr_list.append(tpr)
-        fpr_list.append(fpr)
+        tpr_list.append(float(tpr))
+        fpr_list.append(float(fpr))
     
     # Calculer l'AUC (méthode des trapèzes)
     auc = 0.0
@@ -170,9 +236,12 @@ def confusion_matrix(
     Returns:
         Tuple (TP, FP, TN, FN)
     """
-    tp = sum(1 for p, a in zip(predicted, actual) if p == 1 and a == 1)
-    fp = sum(1 for p, a in zip(predicted, actual) if p == 1 and a == 0)
-    tn = sum(1 for p, a in zip(predicted, actual) if p == 0 and a == 0)
-    fn = sum(1 for p, a in zip(predicted, actual) if p == 0 and a == 1)
+    pred = np.array(predicted, dtype=np.int32)
+    act = np.array(actual, dtype=np.int32)
+    
+    tp = int(np.sum((pred == 1) & (act == 1)))
+    fp = int(np.sum((pred == 1) & (act == 0)))
+    tn = int(np.sum((pred == 0) & (act == 0)))
+    fn = int(np.sum((pred == 0) & (act == 1)))
     
     return tp, fp, tn, fn

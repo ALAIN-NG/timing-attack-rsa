@@ -154,19 +154,31 @@ class MainWindow(QMainWindow):
         self.timing_tab = TimingTab()
         self.attack_tab = AttackTab()
         self.defense_tab = DefenseTab()
+
+        self.rsa_tab.log_message.connect(self.append_console_log)
+        self.timing_tab.log_message.connect(self.append_console_log)
+        self.attack_tab.log_message.connect(self.append_console_log)
+        self.defense_tab.log_message.connect(self.append_console_log)
+
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
+
+        # Connecter le signal measurements_ready
+        self.timing_tab.measurements_ready.connect(self.attack_tab.set_measurements)
+        self.attack_tab.request_measurements.connect(self._send_measurements_to_attack)
+        # self.timing_tab.measurements_ready.connect(self._on_measurements_ready)
+        self.timing_tab.measurements_ready.connect(
+            lambda m: self.append_console_log("INFO", f"{len(m)} mesures disponibles pour l'attaque")
+        )
+    
         
         self.tab_widget.addTab(self.rsa_tab, "Phase 1: RSA Naïf")
         self.tab_widget.addTab(self.timing_tab, "Phase 2: Mesures de Timing")
         self.tab_widget.addTab(self.attack_tab, "Phase 3: Attaque")
         self.tab_widget.addTab(self.defense_tab, "Phase 4: Contre-mesures")
-        self.rsa_tab.log_message.connect(self.append_console_log)
-        self.timing_tab.log_message.connect(self.append_console_log)
-        # self.attack_tab.log_message.connect(self.append_console_log)
-        # self.defense_tab.log_message.connect(self.append_console_log)
-        self.tab_widget.currentChanged.connect(self._on_tab_changed)
+
         main_layout.addWidget(self.tab_widget)
         self.timing_tab.session_loaded.connect(self._on_session_loaded)
-
+    
         # Console de log
         console_container = QWidget()
         console_layout = QHBoxLayout(console_container)
@@ -198,9 +210,16 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index):
         """Appelé quand l'utilisateur change d'onglet."""
-        # Transmettre l'instance RSA à l'onglet 2
-        if index == 1 and self.rsa_tab.rsa_instance:
-            self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+        # Transmettre l'instance RSA aux onglets
+        if self.rsa_tab.rsa_instance:
+            if index == 1:  # Onglet 2
+                self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+            elif index == 2:  # Onglet 3
+                self.attack_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+                # IMPORTANT : Transmettre les mesures si disponibles
+                if hasattr(self.timing_tab, 'measurement_results') and self.timing_tab.measurement_results:
+                    self.attack_tab.set_measurements(self.timing_tab.measurement_results)
+                    self.append_console_log("INFO", f"{len(self.timing_tab.measurement_results)} mesures transmises à l'onglet d'attaque")
             
     def _create_status_bar(self):
         """Crée la barre de statut."""
@@ -250,19 +269,46 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index):
         """Appelé quand l'utilisateur change d'onglet."""
-        # Transmettre l'instance RSA à l'onglet 2
-        if index == 1 and self.rsa_tab.rsa_instance:
-            self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
-        
-        # Si on revient à l'onglet 1 après avoir chargé une session dans l'onglet 2
-        if index == 0 and self.timing_tab.rsa_instance:
-            # Synchroniser l'instance RSA
-            if not self.rsa_tab.rsa_instance:
-                self.rsa_tab.rsa_instance = self.timing_tab.rsa_instance
-                self.rsa_tab._on_keygen_finished(self.timing_tab.rsa_instance)
+        # Toujours transmettre l'instance RSA si elle existe
+        if self.rsa_tab.rsa_instance:
+            # Onglet 2 : Mesures
+            if index == 1:
+                self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+            
+            # Onglet 3 : Attaque
+            elif index == 2:
+                self.attack_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
+                # Transmettre les mesures si disponibles
+                if self.timing_tab.measurement_results:
+                    self.attack_tab.set_measurements(self.timing_tab.measurement_results)
+                    self.append_console_log("INFO", f"Transmission de {len(self.timing_tab.measurement_results)} mesures à l'onglet Attaque")
+                else:
+                    self.append_console_log("WARN", "Aucune mesure disponible. Lancez d'abord une collecte dans l'onglet 2")
+            
+            # Onglet 4 : Contre-mesures
+            elif index == 3:
+                pass  # À implémenter
     
     def _on_session_loaded(self, rsa_instance):
         """Appelé quand une session est chargée dans l'onglet 2."""
-        self.rsa_tab.rsa_instance = rsa_instance
-        self.rsa_tab._on_keygen_finished(rsa_instance)
-        self.append_console_log("INFO", "Instance RSA synchronisée avec l'onglet 1")
+        if rsa_instance:
+            self.rsa_tab.rsa_instance = rsa_instance
+            self.rsa_tab._on_keygen_finished(rsa_instance)
+            
+            # Transmettre aussi les mesures à l'onglet 3
+            if self.timing_tab.measurement_results:
+                self.attack_tab.set_rsa_instance(rsa_instance)
+                self.attack_tab.set_measurements(self.timing_tab.measurement_results)
+            
+            self.append_console_log("INFO", "Instance RSA et mesures synchronisées avec l'onglet Attaque")
+    
+    def _send_measurements_to_attack(self):
+        """Envoie les mesures de l'onglet 2 vers l'onglet 3."""
+        if self.timing_tab.measurement_results:
+            self.attack_tab.set_measurements(self.timing_tab.measurement_results)
+            self.append_console_log("OK", f"Mesures envoyées à l'onglet Attaque: {len(self.timing_tab.measurement_results)} échantillons")
+        elif self.timing_tab.rsa_instance:
+            self.attack_tab.set_rsa_instance(self.timing_tab.rsa_instance)
+            self.append_console_log("WARN", "Instance RSA envoyée mais aucune mesure disponible")
+        else:
+            self.append_console_log("ERROR", "Aucune donnée disponible dans l'onglet 2")

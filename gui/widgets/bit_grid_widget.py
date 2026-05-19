@@ -27,7 +27,7 @@ class BitGridWidget(QWidget):
         # Configuration
         self.cell_size = 40
         self.spacing = 4
-        self.columns = 16  # Nombre de colonnes par défaut
+        self.columns = 24  # Nombre de colonnes par défaut
         
         # Données
         self.bits = []  # Liste des valeurs de bits

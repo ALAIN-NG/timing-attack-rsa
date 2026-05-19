@@ -27,6 +27,7 @@ class TimingTab(QWidget):
     
     log_message = pyqtSignal(str, str)
     session_loaded = pyqtSignal(object) 
+    measurements_ready = pyqtSignal(list)
     
     
     def __init__(self):
@@ -324,9 +325,10 @@ class TimingTab(QWidget):
         self._update_boxplot()
         self._update_heatmap()
         self._refresh_table()
-        
-        # Mettre à jour les métriques
         self._update_metrics()
+        
+        # ÉMETTRE LE SIGNAL
+        self.measurements_ready.emit(results)
         
         self.log_message.emit("OK", f"Collecte terminée: {len(results)} mesures")
     
@@ -537,6 +539,7 @@ class TimingTab(QWidget):
                 result.iqr_ns = float(row['iqr_ns'])
                 
                 self.measurement_results.append(result)
+            self.measurements_ready.emit(self.measurement_results)
             
             self.current_csv_path = filename
             
@@ -704,6 +707,7 @@ class TimingTab(QWidget):
                 result.iqr_ns = float(m['iqr_ns'])
                 
                 self.measurement_results.append(result)
+            self.measurements_ready.emit(self.measurement_results)
             
             # Mettre à jour l'interface
             self.export_btn.setEnabled(True)
