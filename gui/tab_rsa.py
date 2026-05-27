@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
     QLabel, QComboBox, QPushButton, QLineEdit, QSpinBox,
     QTableWidget, QTableWidgetItem, QProgressBar, QLCDNumber,
-    QButtonGroup, QRadioButton, QTextEdit
+    QButtonGroup, QRadioButton, QTextEdit, QScrollArea
 )
 from PyQt6.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QBrush
@@ -236,11 +236,42 @@ def modular_exp_naive(base, exp, modulus):
         info_layout.addStretch()
         viz_layout.addLayout(info_layout)
 
+        # ScrollArea pour la grille de bits (avec barres de défilement)
+        self.rsa_scroll_area = QScrollArea()
+        self.rsa_scroll_area.setWidgetResizable(False)
+        self.rsa_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.rsa_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
         # Widget de grille de bits (interactif)
         self.bit_grid = BitGridWidget()
-        self.bit_grid.setMinimumHeight(350)
-        # self.bit_grid.setMaximumHeight(450)
-        viz_layout.addWidget(self.bit_grid)
+        self.bit_grid.setMinimumSize(900, 350)
+        self.rsa_scroll_area.setWidget(self.bit_grid)
+        viz_layout.addWidget(self.rsa_scroll_area)
+
+        # Contrôles de zoom
+        zoom_layout = QHBoxLayout()
+        zoom_layout.addWidget(QLabel("Zoom :"))
+
+        zoom_out_btn = QPushButton("🔍-")
+        zoom_out_btn.setMaximumWidth(50)
+        zoom_out_btn.setToolTip("Réduire la taille des cellules")
+        zoom_out_btn.clicked.connect(lambda: self._zoom_rsa_grid(-5))
+        zoom_layout.addWidget(zoom_out_btn)
+
+        zoom_in_btn = QPushButton("🔍+")
+        zoom_in_btn.setMaximumWidth(50)
+        zoom_in_btn.setToolTip("Agrandir la taille des cellules")
+        zoom_in_btn.clicked.connect(lambda: self._zoom_rsa_grid(5))
+        zoom_layout.addWidget(zoom_in_btn)
+
+        zoom_reset_btn = QPushButton("↺")
+        zoom_reset_btn.setMaximumWidth(50)
+        zoom_reset_btn.setToolTip("Réinitialiser le zoom")
+        zoom_reset_btn.clicked.connect(lambda: self._zoom_rsa_grid(0))
+        zoom_layout.addWidget(zoom_reset_btn)
+
+        zoom_layout.addStretch()
+        viz_layout.addLayout(zoom_layout)
 
         # Widget Matplotlib pour la visualisation en barres
         self.bit_viz_widget = MplWidget(width=8, height=5.5, dpi=40, with_toolbar=True)
@@ -271,6 +302,22 @@ def modular_exp_naive(base, exp, modulus):
         splitter.setSizes([450, 600])
         
         main_layout.addWidget(splitter)
+    
+    def _zoom_rsa_grid(self, delta):
+        """Ajuste la taille des cellules du BitGridWidget dans l'onglet RSA."""
+        if delta == 0:
+            self.bit_grid.cell_size = 40
+        else:
+            self.bit_grid.cell_size = max(20, min(80, self.bit_grid.cell_size + delta))
+        
+        # Recalculer la taille minimale du widget
+        if self.rsa_instance:
+            bits = self.rsa_instance.get_bits_msb_first(self.rsa_instance.d)
+            rows = (len(bits) + self.bit_grid.columns - 1) // self.bit_grid.columns
+            w = self.bit_grid.columns * (self.bit_grid.cell_size + self.bit_grid.spacing) + 20
+            h = rows * (self.bit_grid.cell_size + self.bit_grid.spacing) + 20
+            self.bit_grid.setMinimumSize(w, h)
+            self.bit_grid.update()
     
     def _init_tests_table(self):
         """Initialise le tableau des tests unitaires."""
@@ -361,6 +408,9 @@ def modular_exp_naive(base, exp, modulus):
         # pour afficher 0/1 au lieu de "?"
         states = ['extracted_1' if bit == 1 else 'extracted_0' for bit in bits]
         self.bit_grid.set_bits(bits, states)
+        
+        # Mettre à jour la taille de la grille
+        self._zoom_rsa_grid(0)
         
         # Mettre à jour les statistiques
         ones_count = sum(bits)

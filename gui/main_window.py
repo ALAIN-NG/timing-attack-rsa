@@ -171,10 +171,10 @@ class MainWindow(QMainWindow):
         )
     
         
-        self.tab_widget.addTab(self.rsa_tab, "Phase 1: RSA Naïf")
-        self.tab_widget.addTab(self.timing_tab, "Phase 2: Mesures de Timing")
-        self.tab_widget.addTab(self.attack_tab, "Phase 3: Attaque")
-        self.tab_widget.addTab(self.defense_tab, "Phase 4: Contre-mesures")
+        self.tab_widget.addTab(self.rsa_tab, "Génération des clés RSA")
+        self.tab_widget.addTab(self.timing_tab, "Mesures de Timing")
+        self.tab_widget.addTab(self.attack_tab, "Attaque")
+        self.tab_widget.addTab(self.defense_tab, "Contre-mesures")
 
         main_layout.addWidget(self.tab_widget)
         self.timing_tab.session_loaded.connect(self._on_session_loaded)
@@ -208,19 +208,7 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(console_container)
 
-    def _on_tab_changed(self, index):
-        """Appelé quand l'utilisateur change d'onglet."""
-        # Transmettre l'instance RSA aux onglets
-        if self.rsa_tab.rsa_instance:
-            if index == 1:  # Onglet 2
-                self.timing_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
-            elif index == 2:  # Onglet 3
-                self.attack_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
-                # IMPORTANT : Transmettre les mesures si disponibles
-                if hasattr(self.timing_tab, 'measurement_results') and self.timing_tab.measurement_results:
-                    self.attack_tab.set_measurements(self.timing_tab.measurement_results)
-                    self.append_console_log("INFO", f"{len(self.timing_tab.measurement_results)} mesures transmises à l'onglet d'attaque")
-            
+
     def _create_status_bar(self):
         """Crée la barre de statut."""
         self.status_bar = QStatusBar()
@@ -287,7 +275,7 @@ class MainWindow(QMainWindow):
             
             # Onglet 4 : Contre-mesures
             elif index == 3:
-                pass  # À implémenter
+                self.defense_tab.set_rsa_instance(self.rsa_tab.rsa_instance)
     
     def _on_session_loaded(self, rsa_instance):
         """Appelé quand une session est chargée dans l'onglet 2."""

@@ -27,12 +27,12 @@ class BitGridWidget(QWidget):
         # Configuration
         self.cell_size = 40
         self.spacing = 4
-        self.columns = 24  # Nombre de colonnes par défaut
+        self.columns = 24
         
         # Données
-        self.bits = []  # Liste des valeurs de bits
-        self.states = []  # États : 'unknown', 'analyzing', 'extracted_0', 'extracted_1', 'correct', 'incorrect'
-        self.current_analyzing = -1  # Index du bit en cours d'analyse
+        self.bits = []
+        self.states = []
+        self.current_analyzing = -1
         
         # Animation
         self._pulse_value = 1.0
@@ -40,7 +40,7 @@ class BitGridWidget(QWidget):
         self.pulse_animation.setDuration(800)
         self.pulse_animation.setStartValue(0.3)
         self.pulse_animation.setEndValue(1.0)
-        self.pulse_animation.setLoopCount(-1)  # Infini
+        self.pulse_animation.setLoopCount(-1)
         
         # Couleurs
         self.colors = {
@@ -60,34 +60,21 @@ class BitGridWidget(QWidget):
         # Police
         self.font = QFont('Segoe UI', 12, QFont.Weight.Bold)
         
-        # Taille minimale
-        self.setMinimumSize(400, 200)
+        # Taille
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
     
     def set_bits(self, bits: list, states: list = None):
-        """
-        Définit la liste des bits à afficher.
-        
-        Args:
-            bits: Liste des valeurs de bits (0 ou 1)
-            states: Liste optionnelle des états ('unknown' par défaut)
-        """
+        """Définit la liste des bits à afficher."""
         self.bits = bits.copy()
         if states:
             self.states = states.copy()
         else:
             self.states = ['unknown'] * len(bits)
-        
         self.current_analyzing = -1
         self.update()
     
     def set_bit_count(self, count: int):
-        """
-        Initialise une grille vide avec 'count' bits inconnus.
-        
-        Args:
-            count: Nombre de bits
-        """
+        """Initialise une grille vide avec 'count' bits inconnus."""
         self.bits = [0] * count
         self.states = ['unknown'] * count
         self.current_analyzing = -1
@@ -95,38 +82,22 @@ class BitGridWidget(QWidget):
     
     @pyqtSlot(int, int)
     def update_bit(self, position: int, value: int, state: str = None):
-        """
-        Met à jour un bit spécifique.
-        
-        Args:
-            position: Index du bit (0 = MSB)
-            value: Valeur du bit (0 ou 1)
-            state: État optionnel (défaut: 'extracted_0' ou 'extracted_1')
-        """
+        """Met à jour un bit spécifique."""
         if 0 <= position < len(self.bits):
             self.bits[position] = value
-            
             if state:
                 self.states[position] = state
             else:
                 self.states[position] = f'extracted_{value}'
-            
             self.update()
     
     @pyqtSlot(int)
     def set_analyzing(self, position: int):
-        """
-        Définit le bit en cours d'analyse.
-        
-        Args:
-            position: Index du bit à analyser
-        """
+        """Définit le bit en cours d'analyse."""
         if 0 <= position < len(self.states):
-            # Réinitialiser l'état précédent si c'était 'analyzing'
             if self.current_analyzing >= 0 and self.current_analyzing < len(self.states):
                 if self.states[self.current_analyzing] == 'analyzing':
                     self.states[self.current_analyzing] = 'unknown'
-            
             self.current_analyzing = position
             self.states[position] = 'analyzing'
             self.pulse_animation.start()
@@ -144,15 +115,15 @@ class BitGridWidget(QWidget):
         self.update()
     
     def compare_with_real(self, real_bits: list):
-        """
-        Compare les bits extraits avec les bits réels et met à jour les états.
-        
-        Args:
-            real_bits: Liste des bits réels de la clé privée
-        """
-        for i, (extracted, real) in enumerate(zip(self.bits, real_bits)):
-            if self.states[i] in ['extracted_0', 'extracted_1']:
-                if extracted == real:
+        """Compare les bits extraits avec les bits réels et met à jour les états."""
+        for i in range(min(len(self.bits), len(real_bits))):
+            if self.states[i] in ['correct', 'incorrect']:
+                if self.bits[i] == real_bits[i]:
+                    self.states[i] = 'correct'
+                else:
+                    self.states[i] = 'incorrect'
+            elif self.states[i] in ['extracted_0', 'extracted_1']:
+                if self.bits[i] == real_bits[i]:
                     self.states[i] = 'correct'
                 else:
                     self.states[i] = 'incorrect'
@@ -166,7 +137,6 @@ class BitGridWidget(QWidget):
         self._pulse_value = 1.0
         self.update()
     
-    # Propriété pour l'animation de pulsation
     def get_pulse_value(self):
         return self._pulse_value
     
@@ -183,22 +153,18 @@ class BitGridWidget(QWidget):
         painter.setFont(self.font)
         
         if not self.bits:
-            # Afficher un message si pas de bits
             painter.setPen(QColor('#7F8C8D'))
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Aucune clé générée")
             return
         
-        # Calculer la disposition
         rows = (len(self.bits) + self.columns - 1) // self.columns
         
-        # Calculer la largeur totale pour centrer
         total_width = self.columns * (self.cell_size + self.spacing) - self.spacing
         total_height = rows * (self.cell_size + self.spacing) - self.spacing
         
-        start_x = (self.width() - total_width) // 2
-        start_y = (self.height() - total_height) // 2
+        start_x = max(10, (self.width() - total_width) // 2)
+        start_y = max(10, (self.height() - total_height) // 2)
         
-        # Dessiner chaque bit
         for i, (bit, state) in enumerate(zip(self.bits, self.states)):
             row = i // self.columns
             col = i % self.columns
@@ -212,14 +178,12 @@ class BitGridWidget(QWidget):
         """Dessine une cellule individuelle."""
         rect = QRect(x, y, self.cell_size, self.cell_size)
         
-        # Déterminer les couleurs selon l'état
         if state == 'unknown':
             bg_color = self.colors['unknown']
             border_color = self.colors['unknown_border']
             text = "?"
             text_color = self.colors['text']
         elif state == 'analyzing':
-            # Pulsation pour l'état "en cours"
             base_color = self.colors['analyzing']
             bg_color = QColor(
                 base_color.red(),
@@ -256,21 +220,17 @@ class BitGridWidget(QWidget):
             text = "?"
             text_color = self.colors['text']
         
-        # Bordure plus épaisse pour le bit en cours
         if is_analyzing:
             pen = QPen(border_color, 3)
         else:
             pen = QPen(border_color, 2)
         
-        # Dessiner le fond
         painter.setBrush(QBrush(bg_color))
         painter.setPen(pen)
         painter.drawRoundedRect(rect, 6, 6)
         
-        # Dessiner le texte
         painter.setPen(text_color)
         
-        # Ajuster la taille du texte pour qu'il tienne
         fm = QFontMetrics(painter.font())
         text_rect = fm.boundingRect(text)
         
@@ -278,14 +238,3 @@ class BitGridWidget(QWidget):
         text_y = y + (self.cell_size + fm.height()) // 2 - 2
         
         painter.drawText(text_x, text_y, text)
-    
-    def sizeHint(self):
-        """Taille suggérée pour le widget."""
-        if not self.bits:
-            return super().sizeHint()
-        
-        rows = (len(self.bits) + self.columns - 1) // self.columns
-        width = self.columns * (self.cell_size + self.spacing) + 20
-        height = rows * (self.cell_size + self.spacing) + 20
-        
-        return self.sizeHint().expandedTo(self.minimumSizeHint())
